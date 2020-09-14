@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2010-2011 Yaniv Ben-Itzhak, The Technion EE Department
+// Copyright (C) 2010-2011 Eitan Zahavi, The Technion EE Department
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -15,33 +15,18 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-#ifndef __MYPROJECT_ASYNC_VCCALC_H_
-#define __MYPROJECT_ASYNC_VCCALC_H_
-
+#ifndef __MYPROJECT_HIER_ROUTER_H_
+#define __MYPROJECT_HIER_ROUTER_H_
 #include <omnetpp.h>
 using namespace omnetpp;
 
-#include "../../../../NoCs_m.h"
-#include "../../HierRouter.h"
-#include "../../FlitMsgCtrl.h"
-
-class FLUVCCalc: public cSimpleModule {
-private:
-    // params
-    const char* schedType;
-
-    // state
-    std::vector< const std::vector<int> * > opCredits;
-    std::vector< const std::vector<int> * > opVCUsage;
-    int lastSrc, lastDst, lastOVC;
-
-    // methods
-    class Sched *getSchedOnPort(int op);
-    void handlePacketMsg(NoCFlitMsg *msg);
-
-  protected:
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
+// we need extra info inside the InPort for tracking FLITs
+class Sched : public cSimpleModule {
+public:
+	// pure virtual...
+	virtual const std::vector<int> *getCredits() const = 0;
+	virtual const std::vector<int> *getVCUsage() const = 0;
+	virtual void  incrVCUsage(int vc) = 0;
 };
 
-#endif
+#endif /* __HNOCS_HIER_ROUTER_H_ */

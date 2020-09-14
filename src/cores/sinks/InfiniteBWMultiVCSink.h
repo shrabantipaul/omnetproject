@@ -22,12 +22,45 @@
 #include <omnetpp.h>
 using namespace omnetpp;
 
+#include "../../NoCs_m.h"
     //
     // The InfiniteBWMultiVCSink is consuming FLITs
     //
 
 class InfiniteBWMultiVCSink: public cSimpleModule {
+private:
+    int numVCs;
+    simtime_t statStartTime; // in sec
+    int numRecPkt; // number of received packets, assume that onlt single source is transmitting
+    // statistics
+    cOutVector end2EndLatencyVec;
+    cStdDev networkLatency; // network-latency for all flits
+    cStdDev end2EndLatency; // source-queuing + network-latency for all flits
 
+    cStdDev SoPEnd2EndLatency; // source queuing + network-latency (for Head flit only)
+    cStdDev SoPLatency; // network-latency
+    cStdDev SoPQTime; // Queuing-time the packet, collect here and not in the source to make sure that I collect statistics
+
+    cStdDev EoPEnd2EndLatency; // source queuing + network-latency (for Head flit only)
+    cStdDev EoPLatency; // network-latency
+    cStdDev EoPQTime; // Queuing-time the packet, collect here and not in the source to make sure that I collect statistics
+
+    cStdDev packetLatency; // total packet network latency, SoP (1st transmit) -> EoP (received @ sink)
+    cStdDev numReceivedPkt; // number of received packets, assume that onlt single source is transmitting
+
+    cHistogram SoPEnd2EndLatencyHist; // source queuing + network-latency (for Head flit only)
+
+    std::vector<int> vcFLITs;
+    std::vector<int> vcFlitIdx; // for checking receiving order of flits from each vc
+    std::vector<int> curPktId; // Current PktId per vc
+
+    std::vector<simtime_t> SoPFirstNetTime; // save the SoP First Trans time until EoP arrive
+
+    void sendCredit(int vc, int num);
+protected:
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
+    virtual void finish();
 };
 
 

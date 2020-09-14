@@ -51,8 +51,8 @@ module idealRouter like sampleproject.routers.Router_Ifc
             gates:
                 sw_in[numPorts - 1];
                 sw_out[numPorts - 1];
-//                sw_ctrl_in[numPorts - 1];
-//                sw_ctrl_out[numPorts - 1];
+                sw_ctrl_in[numPorts - 1];
+                sw_ctrl_out[numPorts - 1];
         }
     connections allowunconnected:
         for p=0..numPorts-1 {
@@ -63,7 +63,7 @@ module idealRouter like sampleproject.routers.Router_Ifc
         for p=0..numPorts - 1, for o=0..numPorts - 1 {
             port[p].sw_out[o-1] <-- idealSwLink <-- port[o].sw_in[p] if p < o;
             port[p].sw_out[o] <-- idealSwLink <-- port[o].sw_in[p-1] if p > o;
-//            port[p].sw_ctrl_out[o-1] <--> idealSwCtrlLink <--> port[o].sw_ctrl_in[p] if p < o;
-//            port[p].sw_ctrl_out[o] <--> idealSwCtrlLink <--> port[o].sw_ctrl_in[p-1] if p > o;
+            port[p].sw_ctrl_out[o-1] <--> idealSwCtrlLink <--> port[o].sw_ctrl_in[p] if p < o;
+            port[p].sw_ctrl_out[o] <--> idealSwCtrlLink <--> port[o].sw_ctrl_in[p-1] if p > o;
         }
 }

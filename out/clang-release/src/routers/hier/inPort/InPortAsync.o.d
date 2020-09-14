@@ -1,7 +1,12 @@
 ../out/clang-release/src/routers/hier/inPort/InPortAsync.o: \
   routers/hier/inPort/InPortAsync.cc routers/hier/inPort/InPortAsync.h \
-  G:/omnetpp-5.6/include\omnetpp.h
+  G:/omnetpp-5.6/include\omnetpp.h routers/hier/inPort/../../../NoCs_m.h \
+  routers/hier/inPort/../FlitMsgCtrl.h
 
 routers/hier/inPort/InPortAsync.h:
 
 G:/omnetpp-5.6/include\omnetpp.h:
+
+routers/hier/inPort/../../../NoCs_m.h:
+
+routers/hier/inPort/../FlitMsgCtrl.h:

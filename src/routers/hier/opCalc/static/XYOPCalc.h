@@ -21,9 +21,41 @@
 #include <omnetpp.h>
 using namespace omnetpp;
 
+#include "../../../../NoCs_m.h"
+#include "../../FlitMsgCtrl.h"
+
 class XYOPCalc : public cSimpleModule
 {
+private:
+    // parameters
+    int numCols,numRows,layers; // the total number of columns in the simulations
+    int rx, ry, rz;  // the local router x and y coordinates
+    int northPort, westPort, southPort, eastPort,upperPort,lowerPort; // port indexes on the router to be used
+    int corePort; // port index where the core module connects
+    const char *portType; // the name of the actual module used for Port_Ifc
+    const char *coreType; // the name of the actual module used for Core_Ifc
 
+    // methods:
+
+    // convert core and router id's into row and col (X and Y)
+    int rowColByID(int id, int &x, int &y, int &z);
+    // return true if the module is a "Port"
+    bool isPortModule(cModule *mod);
+    // Get the pointer to the remote Port module on the given port module
+    cModule *getPortRemotePort(cModule *port);
+    // return true if the module is a "Core"
+    bool isCoreModule(cModule *mod);
+    // Get the pointer to the remote Core module on the given port module
+    cModule *getPortRemoteCore(cModule *port);
+    // obtain the index of the current port out_sw port vector connecting to the port
+    int getIdxOfSwPortConnectedToPort(cModule *port);
+    // analyze Mesh topology and fill in the port numbers to be used for routing
+    int analyzeMeshTopology();
+    // handle the message
+    void handlePacketMsg(NoCFlitMsg* msg);
+protected:
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
 };
 
 #endif

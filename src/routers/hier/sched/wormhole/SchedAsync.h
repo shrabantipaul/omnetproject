@@ -22,10 +22,71 @@
 #include <omnetpp.h>
 using namespace omnetpp;
 
+#include "../../../../NoCs_m.h"
+#include "../../HierRouter.h"
 
 //
 class SchedAsync: public cSimpleModule {
+private:
+    // parameters
+    int numVCs;
+    int flitSize_B; // flitSize
+    int arbitration_type; // 0- winner takes all , 1- round robin ,
+    simtime_t statStartTime; // in sec
 
+    // Out link info
+    cDatarateChannel *chan;
+    double data_rate;
+
+    // state
+    int numInPorts;
+    int numReqs; // total number of requests
+    cQueue Reqs; // active requests
+    std::vector<int> credits; // credits per VC
+    cMessage *popMsg; // this is the clock...
+    cGate *g; // outgoing link
+    bool isDisconnected; // if true means there is no InPort or Core on the other side
+    bool isBusy;
+
+    // arbitration-type
+    int arbiter_start_indx;
+
+    // arbitration state
+    int curVC; // last VC sent
+    std::vector<int> vcCurInPort; // last port sending on this VC
+    std::vector<int> vcCurInVC; // last inVC  sending on this VC
+    std::vector<NoCReqMsg*> vcCurReq; // the current Req (last one arbitrated on a vc)
+    std::vector<bool> vcCurNack; // indicate whether current req for outVC is Nack
+
+    // Statistics
+    cStdDev numUsedVCs; // total number of used VCs, use max to obtain the total required VC.
+    std::vector< int > vcUsage; // count number of pending reqs per VC
+    cStdDev linkUtilization; // the egress link utiliztion connected to the sched
+    double busyTime;
+
+
+    // methods
+    void measureNumUsedVC();
+    void handleFlitMsg(NoCFlitMsg *msg);
+    void handleReqMsg(NoCReqMsg *msg);
+    void handleAckMsg(NoCAckMsg *msg);
+    void handlePopMsg(cMessage *msg);
+    void handleCreditMsg(NoCCreditMsg *msg);
+    void arbitrate();
+
+protected:
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
+    virtual void finish();
+
+public:
+    const std::vector<int> *getVCUsage() const {return &vcUsage;};
+    virtual void incrVCUsage(int vc) { vcUsage[vc]++ ; } ;
+    const std::vector<int> *getCredits() const {
+        return &credits;
+    }
+    ;
+    virtual ~SchedAsync();
 };
 
 #endif
