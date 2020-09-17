@@ -137,10 +137,13 @@ XYOPCalc::analyzeMeshTopology()
             // get the remote port x,y,z
             int x,y,z;
             rowColByID(remPort->getParentModule()->par("id"), x, y, z);
+            std::cout << "\n ********* " <<"rx = "<<rx<<"x= "<<x;
+            std::cout  << "********* " <<"ry = "<<ry<<"y= "<<y;
+            std::cout  << "********* " <<"rz = "<<rx<<"z= "<<z;
             if ((rx == x) && (ry == y) && (rz == z)) {
                 throw cRuntimeError("Ports: %s and %s share the same x:%d and y:%d and z:%d",
                         port->getFullPath().c_str(), remPort->getFullPath().c_str(), x, y,z);
-            } else if ((rx == x) && (ry == y + 1) && (rx == z)) {
+            } else if ((rx == x) && (ry == y + 1)) {
                 // remPort is south port
                 if (southPort != -1) {
                     throw cRuntimeError("Already found a south port: %d for ports: %s."
@@ -153,7 +156,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to South port: " << port->getFullPath() << endl;
                     southPort = portIdx;
                 }
-            } else if ((rx == x) && (ry == y - 1) && (rz == z)) {
+            } else if ((rx == x) && (ry == y - 1)) {
                 // remPort is north port
                 if (northPort != -1) {
                     throw cRuntimeError("Already found a north port: %d for ports: %s."
@@ -166,7 +169,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to North port: " << port->getFullPath() << endl;
                     northPort = portIdx;
                 }
-            } else if ((rx == x + 1) && (ry == y) && (rz == z)) {
+            } else if ((rx == x + 1) && (ry == y)) {
                 // remPort is west port
                 if (westPort != -1) {
                     throw cRuntimeError("Already found a west port: %d for ports: %s."
@@ -179,7 +182,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to West port: " << port->getFullPath() << endl;
                     westPort = portIdx;
                 }
-            } else if ((rx == x - 1) && (ry == y) && (rz == z)) {
+            } else if ((rx == x - 1) && (ry == y)) {
                 // remPort is east port
                 if (eastPort != -1) {
                     throw cRuntimeError("Already found an east port: %d for ports: %s."
@@ -192,7 +195,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to East port: " << port->getFullPath() << endl;
                     eastPort = portIdx;
                 }
-            } else if ((rx == x) && (ry == y) && (rz == z - 1)) {
+            } else if (rz == z + 1) {
                 // remPort is upper port
                 if (upperPort != -1) {
                     throw cRuntimeError("Already found an upper port: %d for ports: %s."
@@ -205,7 +208,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to Upper port: " << port->getFullPath() << endl;
                     upperPort = portIdx;
                 }
-            } else if ((rx == x) && (ry == y) && (rz == z + 1)) {
+            } else if (rz == z - 1) {
                 // remPort is lower port
                 if (lowerPort != -1) {
                     throw cRuntimeError("Already found an lower port: %d for ports: %s."
@@ -245,12 +248,12 @@ void XYOPCalc::initialize()
     numRows = router->getParentModule()->par("rows");
     layers =  router->getParentModule()->par("layers");
     rowColByID(id, rx, ry, rz);
+//    std::cout<<"\n rx"<<rx<<"ry"<<ry<<"rz"<<rz;
     // Analyze the connections of this port building the port number to be used for routing
-    // north, south, west and east. if there is no way to go on some direction the
     analyzeMeshTopology();
-    EV << "-I- " << getFullPath() << " Found N/W/S/E/C ports:" << northPort
+    EV << "-I- " << getFullPath() << " Found N/W/S/E/C/U/L ports:" << northPort
             << "/" << westPort << "/" << southPort << "/"
-            << eastPort << "/" << corePort << endl;
+            << eastPort << "/" << corePort<< "/" << upperPort<< "/" << lowerPort << endl;
     WATCH(northPort);
     WATCH(westPort);
     WATCH(eastPort);
@@ -265,19 +268,22 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
     int dx, dy, dz;
     rowColByID(msg->getDstId(), dx, dy,dz);
     int swOutPortIdx;
-    if ((dx == rx) && (dy == ry && (dz == rz))) {
+    std::cout<<"dx"<<dx<<"rx"<<rx<<"dy"<<dy<<"ry"<<ry<<"dz"<<dz<<"rz"<<rz;
+    if ((dx == rx) && (dy == ry) && (dz == rz)) {
         swOutPortIdx = corePort;
     }
-    std::cout<<"\n***********"<<"e"<<eastPort<<"w"<<westPort<<"s"<<southPort<<"n"<<northPort<<"u"<<upperPort<<"l"<<lowerPort;
+    std::cout<<"\n***********"<<"e"<<eastPort<<"w"<<westPort<<"s"<<southPort<<"n"<<northPort<<"u"<<upperPort<<"l"<<lowerPort<<"c"<<corePort;
+    std::cout<<"rz"<<rz<<"dz"<<dz;
     if ((rz % 2) == 0){
         //route within the layer
+        std::cout<<"inside even layer";
             if (dx > rx) {
                 swOutPortIdx = eastPort;
             } else if (dx < rx) {
                 swOutPortIdx = westPort;
             } else if (dy > ry) {
                 swOutPortIdx = northPort;
-            } else {
+            } else if (dy < ry ){
                 swOutPortIdx = southPort;
             }
             if(dx==rx && dy==ry){
@@ -304,7 +310,7 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
                 swOutPortIdx = westPort;
             } else if (dy > ry) {
                 swOutPortIdx = northPort;
-            } else {
+            } else if (dy < ry) {
                 swOutPortIdx = southPort;
             }
             }
