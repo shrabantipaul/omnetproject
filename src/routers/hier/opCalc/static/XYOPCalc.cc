@@ -139,11 +139,11 @@ XYOPCalc::analyzeMeshTopology()
             rowColByID(remPort->getParentModule()->par("id"), x, y, z);
             std::cout << "\n ********* " <<"rx = "<<rx<<"x= "<<x;
             std::cout  << "********* " <<"ry = "<<ry<<"y= "<<y;
-            std::cout  << "********* " <<"rz = "<<rx<<"z= "<<z;
+            std::cout  << "********* " <<"rz = "<<rz<<"z= "<<z;
             if ((rx == x) && (ry == y) && (rz == z)) {
                 throw cRuntimeError("Ports: %s and %s share the same x:%d and y:%d and z:%d",
                         port->getFullPath().c_str(), remPort->getFullPath().c_str(), x, y,z);
-            } else if ((rx == x) && (ry == y + 1)) {
+            } else if ((rx == x) && (ry == y + 1) && (rz == z)) {
                 // remPort is south port
                 if (southPort != -1) {
                     throw cRuntimeError("Already found a south port: %d for ports: %s."
@@ -156,7 +156,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to South port: " << port->getFullPath() << endl;
                     southPort = portIdx;
                 }
-            } else if ((rx == x) && (ry == y - 1)) {
+            } else if ((rx == x) && (ry == y - 1) && (rz == z)) {
                 // remPort is north port
                 if (northPort != -1) {
                     throw cRuntimeError("Already found a north port: %d for ports: %s."
@@ -169,7 +169,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to North port: " << port->getFullPath() << endl;
                     northPort = portIdx;
                 }
-            } else if ((rx == x + 1) && (ry == y)) {
+            } else if ((rx == x + 1) && (ry == y) && (rz == z)) {
                 // remPort is west port
                 if (westPort != -1) {
                     throw cRuntimeError("Already found a west port: %d for ports: %s."
@@ -182,7 +182,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to West port: " << port->getFullPath() << endl;
                     westPort = portIdx;
                 }
-            } else if ((rx == x - 1) && (ry == y)) {
+            } else if ((rx == x - 1) && (ry == y) && (rz == z)) {
                 // remPort is east port
                 if (eastPort != -1) {
                     throw cRuntimeError("Already found an east port: %d for ports: %s."
@@ -195,7 +195,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to East port: " << port->getFullPath() << endl;
                     eastPort = portIdx;
                 }
-            } else if (rz == z + 1) {
+            } else if ((rx == x) && (ry == y) && (rz == z + 1)) {
                 // remPort is upper port
                 if (upperPort != -1) {
                     throw cRuntimeError("Already found an upper port: %d for ports: %s."
@@ -208,7 +208,7 @@ XYOPCalc::analyzeMeshTopology()
                         << "] to Upper port: " << port->getFullPath() << endl;
                     upperPort = portIdx;
                 }
-            } else if (rz == z - 1) {
+            } else if ((rx == x) && (ry == y) && (rz == z - 1)) {
                 // remPort is lower port
                 if (lowerPort != -1) {
                     throw cRuntimeError("Already found an lower port: %d for ports: %s."
@@ -247,8 +247,9 @@ void XYOPCalc::initialize()
     numCols = router->getParentModule()->par("columns");
     numRows = router->getParentModule()->par("rows");
     layers =  router->getParentModule()->par("layers");
+    std::cout<<"\n>>>>>>>>>> rx"<<rx<<"ry"<<ry<<"rz"<<rz<<"id"<<id;
     rowColByID(id, rx, ry, rz);
-//    std::cout<<"\n rx"<<rx<<"ry"<<ry<<"rz"<<rz;
+    std::cout<<"\n>>>>>>>>>> rx"<<rx<<"ry"<<ry<<"rz"<<rz<<"id"<<id;
     // Analyze the connections of this port building the port number to be used for routing
     analyzeMeshTopology();
     EV << "-I- " << getFullPath() << " Found N/W/S/E/C/U/L ports:" << northPort
@@ -277,15 +278,90 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
     if ((rz % 2) == 0){
         //route within the layer
         std::cout<<"inside even layer";
-            if (dx > rx) {
-                swOutPortIdx = eastPort;
-            } else if (dx < rx) {
-                swOutPortIdx = westPort;
-            } else if (dy > ry) {
-                swOutPortIdx = northPort;
-            } else if (dy < ry ){
-                swOutPortIdx = southPort;
+        if (dy == ry){
+            if(dx==rx){
+                swOutPortIdx = corePort;
             }
+            else if(dx>rx){
+                swOutPortIdx = eastPort;
+            }
+            else{
+                swOutPortIdx = westPort;
+            }
+        }
+        else if(dy>ry){
+            if((ry%2)==0){
+                if((dx>rx) && ((dy-ry)>1)){
+                    if(dx>rx){
+                        swOutPortIdx = eastPort;
+                    }else if ((dy-ry)>1){
+                        swOutPortIdx = northPort;
+                    }
+                }
+                else if((dx>rx)&&(dy-ry==1)){
+                    swOutPortIdx = eastPort;
+                }
+                else{
+                    swOutPortIdx = northPort;
+                }
+            }
+            else if((ry%2)!=0){
+                if((dx<rx) && ((dy-ry)>1)){
+                    if(dx<rx){
+                        swOutPortIdx = westPort;
+                    }else if ((dy-ry)>1){
+                        swOutPortIdx = northPort;
+                    }
+                }
+                else if((dx<rx)&&((dy-ry)==1)){
+                    swOutPortIdx = westPort;
+                }
+                else{
+                    swOutPortIdx = northPort;
+                }
+            }
+        }
+        else if(dy<ry){
+            if((ry%2)==0){
+                if((dx<rx) && ((ry-dy)>1)){
+                    if(dx<rx){
+                        swOutPortIdx = westPort;
+                    }else if ((ry-dy)>1){
+                        swOutPortIdx = southPort;
+                    }
+                }
+                else if((dx<rx)&&((ry-dy)==1)){
+                    swOutPortIdx = westPort;
+                }
+                else{
+                    swOutPortIdx = southPort;
+                }
+            }
+            else if((ry%2)!=0){
+                if((dx>rx) && ((ry-dy)>1)){
+                    if(dx<rx){
+                        swOutPortIdx = eastPort;
+                    }else if ((dy-ry)>1){
+                        swOutPortIdx = southPort;
+                    }
+                }
+                else if((dx>rx)&&((ry-dy)==1)){
+                    swOutPortIdx = eastPort;
+                }
+                else{
+                    swOutPortIdx = southPort;
+                }
+            }
+        }
+//            if (dx > rx) {
+//                swOutPortIdx = eastPort;
+//            } else if (dx < rx) {
+//                swOutPortIdx = westPort;
+//            } else if (dy > ry) {
+//                swOutPortIdx = northPort;
+//            } else if (dy < ry ){
+//                swOutPortIdx = southPort;
+//            }
             if(dx==rx && dy==ry){
           //change the layer
             if((dz - rz) > 0){
@@ -298,21 +374,96 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
     if ((rz % 2) != 0){
         //change the layer
             if((dz - rz) > 0){
-                swOutPortIdx = upperPort;
-            } else if((dz - rz) < 0){
                 swOutPortIdx = lowerPort;
+            } else if((dz - rz) < 0){
+                swOutPortIdx = upperPort;
             }
             if(dz==rz){
         //route within the layer
-            if (dx > rx) {
-                swOutPortIdx = eastPort;
-            } else if (dx < rx) {
-                swOutPortIdx = westPort;
-            } else if (dy > ry) {
-                swOutPortIdx = northPort;
-            } else if (dy < ry) {
-                swOutPortIdx = southPort;
-            }
+//            if (dx > rx) {
+//                swOutPortIdx = eastPort;
+//            } else if (dx < rx) {
+//                swOutPortIdx = westPort;
+//            } else if (dy > ry) {
+//                swOutPortIdx = northPort;
+//            } else if (dy < ry) {
+//                swOutPortIdx = southPort;
+//            }
+                if (dy == ry){
+                            if(dx==rx){
+                                swOutPortIdx = corePort;
+                            }
+                            else if(dx>rx){
+                                swOutPortIdx = eastPort;
+                            }
+                            else{
+                                swOutPortIdx = westPort;
+                            }
+                        }
+                        else if(dy>ry){
+                            if((ry%2)==0){
+                                if((dx>rx) && ((dy-ry)>1)){
+                                    if(dx>rx){
+                                        swOutPortIdx = eastPort;
+                                    }else if ((dy-ry)>1){
+                                        swOutPortIdx = northPort;
+                                    }
+                                }
+                                else if((dx>rx)&&(dy-ry==1)){
+                                    swOutPortIdx = eastPort;
+                                }
+                                else{
+                                    swOutPortIdx = northPort;
+                                }
+                            }
+                            else if((ry%2)!=0){
+                                if((dx<rx) && ((dy-ry)>1)){
+                                    if(dx<rx){
+                                        swOutPortIdx = westPort;
+                                    }else if ((dy-ry)>1){
+                                        swOutPortIdx = northPort;
+                                    }
+                                }
+                                else if((dx<rx)&&((dy-ry)==1)){
+                                    swOutPortIdx = westPort;
+                                }
+                                else{
+                                    swOutPortIdx = northPort;
+                                }
+                            }
+                        }
+                        else if(dy<ry){
+                            if((ry%2)==0){
+                                if((dx<rx) && ((ry-dy)>1)){
+                                    if(dx<rx){
+                                        swOutPortIdx = westPort;
+                                    }else if ((ry-dy)>1){
+                                        swOutPortIdx = southPort;
+                                    }
+                                }
+                                else if((dx<rx)&&((ry-dy)==1)){
+                                    swOutPortIdx = westPort;
+                                }
+                                else{
+                                    swOutPortIdx = southPort;
+                                }
+                            }
+                            else if((ry%2)!=0){
+                                if((dx>rx) && ((ry-dy)>1)){
+                                    if(dx<rx){
+                                        swOutPortIdx = eastPort;
+                                    }else if ((dy-ry)>1){
+                                        swOutPortIdx = southPort;
+                                    }
+                                }
+                                else if((dx>rx)&&((ry-dy)==1)){
+                                    swOutPortIdx = eastPort;
+                                }
+                                else{
+                                    swOutPortIdx = southPort;
+                                }
+                            }
+                        }
             }
     }
     if (swOutPortIdx < 0) {

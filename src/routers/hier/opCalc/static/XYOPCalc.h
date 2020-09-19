@@ -29,7 +29,7 @@ class XYOPCalc : public cSimpleModule
 private:
     // parameters
     int numCols,numRows,layers; // the total number of columns in the simulations
-    int rx, ry, rz;  // the local router x and y coordinates
+    int rx, ry, rz;  // the local router x ,y and z coordinates
     int northPort, westPort, southPort, eastPort,upperPort,lowerPort; // port indexes on the router to be used
     int corePort; // port index where the core module connects
     const char *portType; // the name of the actual module used for Port_Ifc
