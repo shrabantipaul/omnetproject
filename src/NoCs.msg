@@ -49,6 +49,7 @@ packet NoCFlitMsg
   int flitIdx; // index within the packet
   int srcId;
   int dstId;
+  int hopCount;
   bool firstNet; 
   simtime_t InjectTime; // the time the flit is injected to the NoC , i.e: when it leaves the source`s queue. 
   simtime_t FirstNetTime; // the time the flit is transimitted by a sched,  in order to mask source-router latency effects 

@@ -98,6 +98,7 @@ enum NOC_FLIT_TYPES {
  *     int flitIdx; // index within the packet
  *     int srcId;
  *     int dstId;
+ *     int hopCount;
  *     bool firstNet;
  *     simtime_t InjectTime; // the time the flit is injected to the NoC , i.e: when it leaves the source`s queue. 
  *     simtime_t FirstNetTime; // the time the flit is transimitted by a sched,  in order to mask source-router latency effects 
@@ -116,6 +117,7 @@ class NoCFlitMsg : public ::omnetpp::cPacket
     int flitIdx;
     int srcId;
     int dstId;
+    int hopCount;
     bool firstNet;
     ::omnetpp::simtime_t InjectTime;
     ::omnetpp::simtime_t FirstNetTime;
@@ -153,6 +155,8 @@ class NoCFlitMsg : public ::omnetpp::cPacket
     virtual void setSrcId(int srcId);
     virtual int getDstId() const;
     virtual void setDstId(int dstId);
+    virtual int getHopCount() const;
+    virtual void setHopCount(int hopCount);
     virtual bool getFirstNet() const;
     virtual void setFirstNet(bool firstNet);
     virtual ::omnetpp::simtime_t getInjectTime() const;
@@ -165,7 +169,7 @@ inline void doParsimPacking(omnetpp::cCommBuffer *b, const NoCFlitMsg& obj) {obj
 inline void doParsimUnpacking(omnetpp::cCommBuffer *b, NoCFlitMsg& obj) {obj.parsimUnpack(b);}
 
 /**
- * Class generated from <tt>NoCs.msg:59</tt> by nedtool.
+ * Class generated from <tt>NoCs.msg:60</tt> by nedtool.
  * <pre>
  * message NoCCreditMsg extends cMessage
  * {
@@ -216,7 +220,7 @@ inline void doParsimPacking(omnetpp::cCommBuffer *b, const NoCCreditMsg& obj) {o
 inline void doParsimUnpacking(omnetpp::cCommBuffer *b, NoCCreditMsg& obj) {obj.parsimUnpack(b);}
 
 /**
- * Class generated from <tt>NoCs.msg:72</tt> by nedtool.
+ * Class generated from <tt>NoCs.msg:73</tt> by nedtool.
  * <pre>
  * // InPort Request arbitratoin from scheduler 
  * message NoCReqMsg extends cMessage
@@ -280,7 +284,7 @@ inline void doParsimPacking(omnetpp::cCommBuffer *b, const NoCReqMsg& obj) {obj.
 inline void doParsimUnpacking(omnetpp::cCommBuffer *b, NoCReqMsg& obj) {obj.parsimUnpack(b);}
 
 /**
- * Class generated from <tt>NoCs.msg:85</tt> by nedtool.
+ * Class generated from <tt>NoCs.msg:86</tt> by nedtool.
  * <pre>
  * // Scheduler Grant Arbitration to InPort
  * message NoCGntMsg extends cMessage
@@ -328,7 +332,7 @@ inline void doParsimPacking(omnetpp::cCommBuffer *b, const NoCGntMsg& obj) {obj.
 inline void doParsimUnpacking(omnetpp::cCommBuffer *b, NoCGntMsg& obj) {obj.parsimUnpack(b);}
 
 /**
- * Class generated from <tt>NoCs.msg:94</tt> by nedtool.
+ * Class generated from <tt>NoCs.msg:95</tt> by nedtool.
  * <pre>
  * // each grant must be either declined or accepted using this ACK message
  * message NoCAckMsg extends cMessage
@@ -380,7 +384,7 @@ inline void doParsimPacking(omnetpp::cCommBuffer *b, const NoCAckMsg& obj) {obj.
 inline void doParsimUnpacking(omnetpp::cCommBuffer *b, NoCAckMsg& obj) {obj.parsimUnpack(b);}
 
 /**
- * Class generated from <tt>NoCs.msg:104</tt> by nedtool.
+ * Class generated from <tt>NoCs.msg:105</tt> by nedtool.
  * <pre>
  * // a pop from a particular VC and OP
  * message NoCPopMsg extends cMessage

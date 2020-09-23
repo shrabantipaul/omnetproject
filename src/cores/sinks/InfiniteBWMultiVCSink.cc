@@ -33,6 +33,9 @@ void InfiniteBWMultiVCSink::initialize() {
     networkLatency.setName("network-latency-ns"); // network-latency per flit
     packetLatency.setName("packet-network-latency-ns"); // network-latency per packet
 
+    sourceId.setName("source-id");
+    destinationId.setName("destination-id");
+    flitHopCount.setName("hop-count");
     // statistics for head-flits only
     SoPEnd2EndLatency.setName("SoP-end-to-end-latency-ns");
     SoPLatency.setName("SoP-network-latency-ns");
@@ -79,7 +82,14 @@ void InfiniteBWMultiVCSink::handleMessage(cMessage *msg) {
     NoCFlitMsg *flit = dynamic_cast<NoCFlitMsg*> (msg);
     int vc = flit->getVC();
     sendCredit(vc, 1);
+    std::cout<<"\n ##########"<<flit->getSrcId()<<"##"<<flit->getDstId();
+    int srcId = flit->getSrcId();
+    int dstId = flit->getDstId();
+    int hopCount = flit->getHopCount();
 
+    sourceId.collect(srcId);
+    destinationId.collect(dstId);
+    flitHopCount.collect(hopCount);
     // some statistics
     if (simTime() > statStartTime) {
         vcFLITs[vc]++;
@@ -98,7 +108,7 @@ void InfiniteBWMultiVCSink::handleMessage(cMessage *msg) {
         end2EndLatency.collect(eed_ns);
         networkLatency.collect(d_ns);
         end2EndLatencyVec.record(eed_ns);
-
+        std::cout<<"\n ///////"<<d_ns;
         if (flit->getType() == NOC_START_FLIT) {
             SoPEnd2EndLatency.collect(eed_ns);
             SoPEnd2EndLatencyHist.collect(eed_ns);
@@ -117,6 +127,9 @@ void InfiniteBWMultiVCSink::handleMessage(cMessage *msg) {
             }
             numRecPkt++;
         }
+
+        std::cout<<"\n srcid "<<flit->getSrcId()<<" dest id "<<flit->getDstId()<<" packets "<<numRecPkt;
+
 
         if (flit->getType() == NOC_END_FLIT) {
             EoPEnd2EndLatency.collect(eed_ns);
@@ -201,6 +214,9 @@ void InfiniteBWMultiVCSink::finish() {
         networkLatency.record();
         end2EndLatency.record();
 
+        sourceId.record();
+        destinationId.record();
+        flitHopCount.record();
         numReceivedPkt.collect(numRecPkt);
         numReceivedPkt.record();
         double BW_MBps = 1e-6 * totalFlits * flitSize_B / (simTime().dbl()- statStartTime);

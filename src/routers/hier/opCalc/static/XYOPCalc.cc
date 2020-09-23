@@ -26,7 +26,7 @@ int XYOPCalc::rowColByID(int id, int &x, int &y, int &z)
     x = id % numCols;
     z = id / (numRows*numCols);
     y = (id / numCols) - (z*numRows);
-    std::cout<<"\n id is "<<id<<"x="<<x<<"y="<<y<<"z="<<z;
+//    std::cout<<"\n id is "<<id<<"x="<<x<<"y="<<y<<"z="<<z;
     return(0);
 }
 
@@ -120,12 +120,14 @@ XYOPCalc::analyzeMeshTopology()
 
         if (remCore) {
             // remote side is the core connected to the router
+//            std::cout<<"inside remcore"<<portIdx;
             int x,y,z;
             rowColByID(remCore->par("id"), x, y,z);
             if ((rx == x) && (ry == y) && (rz == z)) {
                 EV << "-I- " << getParentModule()->getFullPath()
                     << " connected through sw_out[" << portIdx
                     << "] to Core port: " << port->getFullPath() << endl;
+
                 corePort = portIdx;
             } else {
                 throw cRuntimeError("Port: %s and connected Core %s do not share the same x:%d and y:%d and z:%d",
@@ -137,9 +139,9 @@ XYOPCalc::analyzeMeshTopology()
             // get the remote port x,y,z
             int x,y,z;
             rowColByID(remPort->getParentModule()->par("id"), x, y, z);
-            std::cout << "\n ********* " <<"rx = "<<rx<<"x= "<<x;
-            std::cout  << "********* " <<"ry = "<<ry<<"y= "<<y;
-            std::cout  << "********* " <<"rz = "<<rz<<"z= "<<z;
+//            std::cout << "\n ********* " <<"rx = "<<rx<<"x= "<<x;
+//            std::cout  << "********* " <<"ry = "<<ry<<"y= "<<y;
+//            std::cout  << "********* " <<"rz = "<<rz<<"z= "<<z;
             if ((rx == x) && (ry == y) && (rz == z)) {
                 throw cRuntimeError("Ports: %s and %s share the same x:%d and y:%d and z:%d",
                         port->getFullPath().c_str(), remPort->getFullPath().c_str(), x, y,z);
@@ -247,9 +249,9 @@ void XYOPCalc::initialize()
     numCols = router->getParentModule()->par("columns");
     numRows = router->getParentModule()->par("rows");
     layers =  router->getParentModule()->par("layers");
-    std::cout<<"\n>>>>>>>>>> rx"<<rx<<"ry"<<ry<<"rz"<<rz<<"id"<<id;
+//    std::cout<<"\n>>>>>>>>>> rx"<<rx<<"ry"<<ry<<"rz"<<rz<<"id"<<id;
     rowColByID(id, rx, ry, rz);
-    std::cout<<"\n>>>>>>>>>> rx"<<rx<<"ry"<<ry<<"rz"<<rz<<"id"<<id;
+//    std::cout<<"\n>>>>>>>>>> rx"<<rx<<"ry"<<ry<<"rz"<<rz<<"id"<<id;
     // Analyze the connections of this port building the port number to be used for routing
     analyzeMeshTopology();
     EV << "-I- " << getFullPath() << " Found N/W/S/E/C/U/L ports:" << northPort
@@ -269,17 +271,19 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
     int dx, dy, dz;
     rowColByID(msg->getDstId(), dx, dy,dz);
     int swOutPortIdx;
-    std::cout<<"dx"<<dx<<"rx"<<rx<<"dy"<<dy<<"ry"<<ry<<"dz"<<dz<<"rz"<<rz;
+//    static int count = 0;
+//    std::cout<<"........."<<msg->getDstId();
+//    std::cout<<"dx"<<dx<<"rx"<<rx<<"dy"<<dy<<"ry"<<ry<<"dz"<<dz<<"rz"<<rz;
     if ((dx == rx) && (dy == ry) && (dz == rz)) {
         swOutPortIdx = corePort;
     }
-    std::cout<<"\n***********"<<"e"<<eastPort<<"w"<<westPort<<"s"<<southPort<<"n"<<northPort<<"u"<<upperPort<<"l"<<lowerPort<<"c"<<corePort;
-    std::cout<<"rz"<<rz<<"dz"<<dz;
-    if ((rz % 2) == 0){
+//    std::cout<<"\n***********"<<"e"<<eastPort<<"w"<<westPort<<"s"<<southPort<<"n"<<northPort<<"u"<<upperPort<<"l"<<lowerPort<<"c"<<corePort;
+//    std::cout<<"rz"<<rz<<"dz"<<dz;
+    else if ((rz % 2) == 0){
         //route within the layer
-        std::cout<<"inside even layer";
+//        std::cout<<"inside even layer";
         if (dy == ry){
-            if(dx==rx){
+            if((dx==rx) && (dz==rz)){
                 swOutPortIdx = corePort;
             }
             else if(dx>rx){
@@ -326,30 +330,38 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
                 if((dx<rx) && ((ry-dy)>1)){
                     if(dx<rx){
                         swOutPortIdx = westPort;
+
                     }else if ((ry-dy)>1){
                         swOutPortIdx = southPort;
+
                     }
                 }
                 else if((dx<rx)&&((ry-dy)==1)){
                     swOutPortIdx = westPort;
+
                 }
                 else{
                     swOutPortIdx = southPort;
+
                 }
             }
             else if((ry%2)!=0){
                 if((dx>rx) && ((ry-dy)>1)){
                     if(dx<rx){
                         swOutPortIdx = eastPort;
+
                     }else if ((dy-ry)>1){
                         swOutPortIdx = southPort;
+
                     }
                 }
                 else if((dx>rx)&&((ry-dy)==1)){
                     swOutPortIdx = eastPort;
+
                 }
                 else{
                     swOutPortIdx = southPort;
+
                 }
             }
         }
@@ -366,17 +378,21 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
           //change the layer
             if((dz - rz) > 0){
                 swOutPortIdx = lowerPort;
+
             } else if((dz - rz) < 0){
                 swOutPortIdx = upperPort;
+
             }
           }
     }
-    if ((rz % 2) != 0){
+    else if ((rz % 2) != 0){
         //change the layer
             if((dz - rz) > 0){
                 swOutPortIdx = lowerPort;
+
             } else if((dz - rz) < 0){
                 swOutPortIdx = upperPort;
+
             }
             if(dz==rz){
         //route within the layer
@@ -392,12 +408,15 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
                 if (dy == ry){
                             if(dx==rx){
                                 swOutPortIdx = corePort;
+
                             }
                             else if(dx>rx){
                                 swOutPortIdx = eastPort;
+
                             }
                             else{
                                 swOutPortIdx = westPort;
+
                             }
                         }
                         else if(dy>ry){
@@ -405,30 +424,38 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
                                 if((dx>rx) && ((dy-ry)>1)){
                                     if(dx>rx){
                                         swOutPortIdx = eastPort;
+
                                     }else if ((dy-ry)>1){
                                         swOutPortIdx = northPort;
+
                                     }
                                 }
                                 else if((dx>rx)&&(dy-ry==1)){
                                     swOutPortIdx = eastPort;
+
                                 }
                                 else{
                                     swOutPortIdx = northPort;
+
                                 }
                             }
                             else if((ry%2)!=0){
                                 if((dx<rx) && ((dy-ry)>1)){
                                     if(dx<rx){
                                         swOutPortIdx = westPort;
+
                                     }else if ((dy-ry)>1){
                                         swOutPortIdx = northPort;
+
                                     }
                                 }
                                 else if((dx<rx)&&((dy-ry)==1)){
                                     swOutPortIdx = westPort;
+
                                 }
                                 else{
                                     swOutPortIdx = northPort;
+
                                 }
                             }
                         }
@@ -437,35 +464,47 @@ void XYOPCalc::handlePacketMsg(NoCFlitMsg* msg)
                                 if((dx<rx) && ((ry-dy)>1)){
                                     if(dx<rx){
                                         swOutPortIdx = westPort;
+
                                     }else if ((ry-dy)>1){
                                         swOutPortIdx = southPort;
+
                                     }
                                 }
                                 else if((dx<rx)&&((ry-dy)==1)){
                                     swOutPortIdx = westPort;
+
                                 }
                                 else{
                                     swOutPortIdx = southPort;
+
                                 }
                             }
                             else if((ry%2)!=0){
                                 if((dx>rx) && ((ry-dy)>1)){
                                     if(dx<rx){
                                         swOutPortIdx = eastPort;
+
                                     }else if ((dy-ry)>1){
                                         swOutPortIdx = southPort;
+
                                     }
                                 }
                                 else if((dx>rx)&&((ry-dy)==1)){
                                     swOutPortIdx = eastPort;
+
                                 }
                                 else{
                                     swOutPortIdx = southPort;
+
                                 }
                             }
                         }
             }
     }
+
+//    static int i = count;
+//    std::cout<<"*********"<<count;
+
     if (swOutPortIdx < 0) {
         throw cRuntimeError("Routing dead end at %s (%d,%d,%d) "
                 "for destination %d (%d,%d,%d)",

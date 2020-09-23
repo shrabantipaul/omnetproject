@@ -48,6 +48,10 @@ private:
     cStdDev packetLatency; // total packet network latency, SoP (1st transmit) -> EoP (received @ sink)
     cStdDev numReceivedPkt; // number of received packets, assume that onlt single source is transmitting
 
+    cStdDev sourceId;
+    cStdDev destinationId;
+    cStdDev flitHopCount;
+
     cHistogram SoPEnd2EndLatencyHist; // source queuing + network-latency (for Head flit only)
 
     std::vector<int> vcFLITs;
